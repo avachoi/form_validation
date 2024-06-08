@@ -8,6 +8,7 @@ const terms = registrationForm.elements["terms"];
 const loginUsername = loginForm.elements["username"];
 const loginPassword = loginForm.elements["password"];
 const errorDisplay = document.getElementById("errorDisplay");
+const checkbox = loginForm.elements["persist"];
 
 function displayError(message, element) {
 	errorDisplay.innerText = message;
@@ -78,9 +79,9 @@ function validatePasswordCheck(password1, password2) {
 //event listener
 registrationForm.addEventListener("submit", function (evt) {
 	evt.preventDefault();
-	let usernameVal = username.value;
+	let usernameVal = username.value.trim().toLowerCase();
 	let usernameError = validUsername(usernameVal);
-	let emailVal = email.value;
+	let emailVal = email.value.trim().toLowerCase();
 	let emailError = validateEmail(emailVal);
 	let passwordVal = password.value;
 	let passwordError = validatePassword(passwordVal);
@@ -105,8 +106,44 @@ registrationForm.addEventListener("submit", function (evt) {
 		evt.preventDefault();
 		return false;
 	}
+	let storedUsers = JSON.parse(localStorage.getItem("users")) || {};
+	if (storedUsers[usernameVal]) {
+		displayError("That username is already taken", username);
+		return false;
+	}
+	storedUsers[usernameVal] = { email: emailVal, password: passwordVal };
+	localStorage.setItem("users", JSON.stringify(storedUsers));
 
+	console.log("resistration", localStorage.getItem("users"));
 	errorDisplay.innerText = "Resigistation successful!";
 	registrationForm.reset();
+	return true;
+});
+
+loginForm.addEventListener("submit", function (evt) {
+	evt.preventDefault();
+	let storedUsers = JSON.parse(localStorage.getItem("users")) || {};
+	console.log("logIn", storedUsers);
+	let username = loginUsername.value.trim().toLowerCase();
+	let password = loginPassword.value;
+	if (!storedUsers[username]) {
+		displayError("The username do not exist", loginUsername);
+		evt.preventDefault();
+		return false;
+	}
+	if (storedUsers[username].password !== password) {
+		console.log("password", storedUsers[username].password, password);
+		displayError("incorrect password", loginPassword);
+		evt.preventDefault();
+		return false;
+	}
+
+	console.log("resistration", localStorage.getItem("users"));
+	if (checkbox.checked) {
+		errorDisplay.innerText = "I keep you logged in";
+	} else {
+		errorDisplay.innerText = "log in successful!";
+	}
+	loginForm.reset();
 	return true;
 });
